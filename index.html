@@ -9,11 +9,11 @@
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
+            text-align: center;
         }
         .container {
             max-width: 600px;
             margin: auto;
-            text-align: center;
         }
         .account-info {
             font-size: 18px;
@@ -45,12 +45,19 @@
         <p class="copy-message">계좌번호를 클릭하여 복사하기</p>
 
         <script>
+            // URL에서 submissionId 가져오기
+            const submissionId = new URLSearchParams(window.location.search).get('submissionId');
+
             // Google Apps Script에서 데이터 가져오기
-            fetch("https://script.google.com/macros/s/AKfycbxq7yuL5MtxuR8r5naRVnKkNc4MjmvuKRcGS8Ss3MaXEHwDitlaBguLI5zagGCJf1hz/exec")
+            fetch("https://script.google.com/macros/s/AKfycbyCABD-PW2tyR4kUCozJi5LEbyT7Y5CYvNdeTs5iX5QIVIc2dXcA8eMJexRsYI-Z3i0/exec?submissionId=" + submissionId)
             .then(response => response.json())
             .then(data => {
-                // 총 가격 표시
-                document.getElementById("total-price").textContent = data.total;
+                if (data.total) {
+                    // 총 가격 표시
+                    document.getElementById("total-price").textContent = data.total;
+                } else {
+                    document.getElementById("total-price").textContent = "오류가 발생했습니다.";
+                }
             })
             .catch(error => console.error('Error:', error));
 
@@ -63,8 +70,6 @@
                 textarea.select();
                 document.execCommand("copy");
                 document.body.removeChild(textarea);
-
-                // 복사 완료 메시지 출력
                 alert("계좌번호가 복사되었습니다!");
             });
         </script>
