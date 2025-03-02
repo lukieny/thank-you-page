@@ -5,86 +5,169 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주문 완료</title>
     <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --accent-color: #007BFF;
+            --hover-color: #0056b3;
+            --card-bg: #f9f9f9;
+            --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        /* 다크모드 */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #1e1e1e;
+                --text-color: #e0e0e0;
+                --card-bg: #2a2a2a;
+                --shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            }
+        }
+        /* Dark Reader 강제 다크모드 대응 */
+        [data-darkreader-scheme="dark"] {
+            --bg-color: #1e1e1e !important;
+            --text-color: #e0e0e0 !important;
+            --card-bg: #2a2a2a !important;
+        }
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
             padding: 20px;
-            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
         }
         .container {
             max-width: 600px;
-            margin: auto;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            text-align: center;
         }
-        .account-info {
-            font-size: 18px;
+        h1 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            margin: 20px 0;
+            font-size: 1.1em;
+        }
+        .copyable {
             font-weight: bold;
-            margin-top: 20px;
+            color: var(--accent-color);
             cursor: pointer;
-            color: #007BFF;
             transition: color 0.3s;
         }
-        .account-info:hover {
-            color: #0056b3;
+        .copyable:hover {
+            color: var(--hover-color);
         }
-        .copy-message {
-            margin-top: 10px;
-            font-size: 14px;
-            color: #555;
+        .hint {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 5px;
+        }
+        .copied {
+            font-size: 0.9em;
+            color: #28a745;
+            margin-top: 5px;
+            display: none;
         }
         .loading {
             color: #888;
+        }
+        /* 반응형 디자인 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.2em;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>주문이 완료되었습니다!</h1>
-        <p>총 금액: <span id="total-price" class="loading">로딩 중...</span>원</p>
-        
-        <div class="account-info" id="account-number">
-            광주은행 1107021220258
+        <div class="info-item">
+            총 금액: <span id="total-price" class="loading">로딩 중...</span>원
+            <div id="total-copied" class="copied">복사됨!</div>
         </div>
-        <p class="copy-message">계좌번호를 클릭하여 복사하기</p>
+        <div class="info-item">
+            <span id="account-number" class="copyable">광주은행 1107021220258</span>
+            <div class="hint">클릭하여 계좌번호 복사</div>
+            <div id="account-copied" class="copied">복사됨!</div>
+        </div>
 
         <script>
             const submissionId = new URLSearchParams(window.location.search).get('submissionId');
             const totalPriceElement = document.getElementById("total-price");
+            const accountNumberElement = document.getElementById("account-number");
+            const totalCopiedElement = document.getElementById("total-copied");
+            const accountCopiedElement = document.getElementById("account-copied");
 
-            // 최대 5초 동안 재시도하며 데이터 가져오기
+            // 금액 포맷팅 함수 (표시는 1,049,400, 복사는 1049400)
+            function formatPrice(value) {
+                return Number(value).toLocaleString('ko-KR');
+            }
+
+            // 복사 함수
+            function copyToClipboard(text, copiedElement) {
+                const textarea = document.createElement("textarea");
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textarea);
+                copiedElement.style.display = "block";
+                setTimeout(() => copiedElement.style.display = "none", 2000);
+            }
+
+            // 데이터 가져오기 (최대 5초 재시도)
             function fetchWithRetry(attempts, delay) {
                 fetch("https://script.google.com/macros/s/AKfycbzoEXTIAiOaGYEj_2eQQRa-seZpFvRzRwM79iaaYCCyQan2R0Y-nDJFy8R4OeArA-Dm/exec?submissionId=" + submissionId)
                     .then(response => response.json())
                     .then(data => {
                         if (data.total) {
-                            totalPriceElement.textContent = data.total;
+                            totalPriceElement.textContent = formatPrice(data.total);
+                            totalPriceElement.classList.remove("loading");
+                            totalPriceElement.classList.add("copyable");
+                            totalPriceElement.onclick = () => copyToClipboard(data.total, totalCopiedElement);
                         } else if (attempts > 0) {
-                            setTimeout(() => fetchWithRetry(attempts - 1, delay), delay); // 재시도
+                            setTimeout(() => fetchWithRetry(attempts - 1, delay), delay);
                         } else {
-                            totalPriceElement.textContent = "오류가 발생했습니다.";
+                            totalPriceElement.textContent = "오류가 발생했습니다";
                         }
                     })
                     .catch(error => {
                         console.error('Error:', error);
                         if (attempts > 0) {
-                            setTimeout(() => fetchWithRetry(attempts - 1, delay), delay); // 재시도
+                            setTimeout(() => fetchWithRetry(attempts - 1, delay), delay);
                         } else {
                             totalPriceElement.textContent = "네트워크 오류 발생";
                         }
                     });
             }
 
-            // 3번 재시도, 1초 간격
             fetchWithRetry(3, 1000);
 
-            // 계좌번호 복사 기능
-            document.getElementById("account-number").addEventListener("click", function() {
-                var text = this.textContent;
-                var textarea = document.createElement("textarea");
-                textarea.value = text;
-                document.body.appendChild(textarea);
-                textarea.select();
-                document.execCommand("copy");
-                document.body.removeChild(textarea);
-                alert("계좌번호가 복사되었습니다!");
+            // 계좌번호 복사 (공백 제거)
+            accountNumberElement.addEventListener("click", () => {
+                const cleanText = "광주은행1107021220258"; // 공백 제거한 값
+                copyToClipboard(cleanText, accountCopiedElement);
             });
         </script>
     </div>
