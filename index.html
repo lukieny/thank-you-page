@@ -49,7 +49,7 @@
             const submissionId = new URLSearchParams(window.location.search).get('submissionId');
 
             // Google Apps Script에서 데이터 가져오기
-            fetch("https://script.google.com/macros/s/AKfycbz7NoQPUi0Hi-yehLNPpEQ6L4pLEAfWimZWhopGVgJEPi69jsO92alIvhRPLpeBqaFz/exec?submissionId=" + submissionId)
+            fetch("https://script.google.com/macros/s/AKfycbxPBnUCbOgH9QQYUERrlejBXIXBukNvwAfX2Bh19wLZINhic87fn8F6ih84NrrOvxNp/exec?submissionId=" + submissionId)
             .then(response => response.json())
             .then(data => {
                 if (data.total) {
