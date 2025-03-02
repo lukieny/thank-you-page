@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주문 완료</title>
     <style>
-        /* 스타일링 */
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
@@ -31,39 +30,54 @@
             font-size: 14px;
             color: #555;
         }
+        .loading {
+            color: #888;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>주문이 완료되었습니다!</h1>
-        <p>총 금액: <span id="total-price"></span>원</p>
+        <p>총 금액: <span id="total-price" class="loading">로딩 중...</span>원</p>
         
-        <!-- 계좌번호 정보 -->
         <div class="account-info" id="account-number">
             광주은행 1107021220258
         </div>
         <p class="copy-message">계좌번호를 클릭하여 복사하기</p>
 
         <script>
-            // URL에서 submissionId 가져오기
             const submissionId = new URLSearchParams(window.location.search).get('submissionId');
+            const totalPriceElement = document.getElementById("total-price");
 
-            // Google Apps Script에서 데이터 가져오기
-            fetch("https://script.google.com/macros/s/AKfycbzoEXTIAiOaGYEj_2eQQRa-seZpFvRzRwM79iaaYCCyQan2R0Y-nDJFy8R4OeArA-Dm/exec?submissionId=" + submissionId)
-            .then(response => response.json())
-            .then(data => {
-                if (data.total) {
-                    // 총 가격 표시
-                    document.getElementById("total-price").textContent = data.total;
-                } else {
-                    document.getElementById("total-price").textContent = "오류가 발생했습니다.";
-                }
-            })
-            .catch(error => console.error('Error:', error));
+            // 최대 5초 동안 재시도하며 데이터 가져오기
+            function fetchWithRetry(attempts, delay) {
+                fetch("https://script.google.com/macros/s/AKfycbzoEXTIAiOaGYEj_2eQQRa-seZpFvRzRwM79iaaYCCyQan2R0Y-nDJFy8R4OeArA-Dm/exec?submissionId=" + submissionId)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.total) {
+                            totalPriceElement.textContent = data.total;
+                        } else if (attempts > 0) {
+                            setTimeout(() => fetchWithRetry(attempts - 1, delay), delay); // 재시도
+                        } else {
+                            totalPriceElement.textContent = "오류가 발생했습니다.";
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        if (attempts > 0) {
+                            setTimeout(() => fetchWithRetry(attempts - 1, delay), delay); // 재시도
+                        } else {
+                            totalPriceElement.textContent = "네트워크 오류 발생";
+                        }
+                    });
+            }
 
-            // 계좌번호 클릭 시 복사 기능 구현
+            // 3번 재시도, 1초 간격
+            fetchWithRetry(3, 1000);
+
+            // 계좌번호 복사 기능
             document.getElementById("account-number").addEventListener("click", function() {
-                var text = this.textContent;  // 계좌번호 텍스트 가져오기
+                var text = this.textContent;
                 var textarea = document.createElement("textarea");
                 textarea.value = text;
                 document.body.appendChild(textarea);
