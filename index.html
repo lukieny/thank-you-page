@@ -13,7 +13,6 @@
             --card-bg: #f9f9f9;
             --shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        /* 다크모드 */
         @media (prefers-color-scheme: dark) {
             :root {
                 --bg-color: #1e1e1e;
@@ -22,7 +21,6 @@
                 --shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             }
         }
-        /* Dark Reader 강제 다크모드 대응 */
         [data-darkreader-scheme="dark"] {
             --bg-color: #1e1e1e !important;
             --text-color: #e0e0e0 !important;
@@ -67,7 +65,7 @@
             color: var(--hover-color);
         }
         .hint {
-            font-size: 0.9em;
+            font-size: 0.8em; /* 글자 크기 줄임 */
             color: #888;
             margin-top: 5px;
         }
@@ -80,7 +78,6 @@
         .loading {
             color: #888;
         }
-        /* 반응형 디자인 */
         @media (max-width: 768px) {
             .container {
                 padding: 20px;
@@ -104,6 +101,7 @@
         <h1>주문이 완료되었습니다!</h1>
         <div class="info-item">
             총 금액: <span id="total-price" class="loading">로딩 중...</span>원
+            <div class="hint">클릭하여 금액 복사</div>
             <div id="total-copied" class="copied">복사됨!</div>
         </div>
         <div class="info-item">
@@ -119,12 +117,10 @@
             const totalCopiedElement = document.getElementById("total-copied");
             const accountCopiedElement = document.getElementById("account-copied");
 
-            // 금액 포맷팅 함수 (표시는 1,049,400, 복사는 1049400)
             function formatPrice(value) {
                 return Number(value).toLocaleString('ko-KR');
             }
 
-            // 복사 함수
             function copyToClipboard(text, copiedElement) {
                 const textarea = document.createElement("textarea");
                 textarea.value = text;
@@ -136,7 +132,6 @@
                 setTimeout(() => copiedElement.style.display = "none", 2000);
             }
 
-            // 데이터 가져오기 (최대 5초 재시도)
             function fetchWithRetry(attempts, delay) {
                 fetch("https://script.google.com/macros/s/AKfycbzoEXTIAiOaGYEj_2eQQRa-seZpFvRzRwM79iaaYCCyQan2R0Y-nDJFy8R4OeArA-Dm/exec?submissionId=" + submissionId)
                     .then(response => response.json())
@@ -164,9 +159,8 @@
 
             fetchWithRetry(3, 1000);
 
-            // 계좌번호 복사 (공백 제거)
             accountNumberElement.addEventListener("click", () => {
-                const cleanText = "광주은행1107021220258"; // 공백 제거한 값
+                const cleanText = "광주은행1107021220258";
                 copyToClipboard(cleanText, accountCopiedElement);
             });
         </script>
