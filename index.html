@@ -133,7 +133,7 @@
             }
 
             function fetchWithRetry(attempts, delay) {
-                fetch("https://script.google.com/macros/s/AKfycbzoEXTIAiOaGYEj_2eQQRa-seZpFvRzRwM79iaaYCCyQan2R0Y-nDJFy8R4OeArA-Dm/exec?submissionId=" + submissionId)
+                fetch("https://script.google.com/macros/s/AKfycbyWDynE1X4H1ITpmELPs10Zh1zlMD9uS6l7EHKwUKEknH28YTYOvmr90V4tp_z_xtp_/exec?submissionId=" + submissionId)
                     .then(response => response.json())
                     .then(data => {
                         if (data.total) {
